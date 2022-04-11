@@ -28,6 +28,16 @@ void UCombatComponent::BeginPlay()
 	}
 }
 
+void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+{
+	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (bFireButtonPressed) 
+	{
+		Fire();
+	}
+}
+
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
 	bAiming = bIsAiming;
@@ -58,13 +68,35 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	}
 }
 
-
-
-void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
+void UCombatComponent::FireButtonPressed(bool bPressed)
 {
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+	bFireButtonPressed = bPressed;
 
+	Fire();
 }
+
+void UCombatComponent::Fire()
+{
+	if (Character && EquippedWeapon && bFireButtonPressed)
+	{
+		ServerFire();
+	}
+}
+
+
+void UCombatComponent::ServerFire_Implementation()
+{
+	if (Character && Character->HasAuthority()) {
+		NetMulticastFire();
+	}
+}
+
+void UCombatComponent::NetMulticastFire_Implementation()
+{
+	Character->PlayFireMontage(bAiming);
+	EquippedWeapon->Fire();
+}
+
 
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {

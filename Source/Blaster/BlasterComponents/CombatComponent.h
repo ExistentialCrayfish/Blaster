@@ -34,14 +34,30 @@ protected:
 	UFUNCTION(Server, Reliable)
 	void ServerSetAiming(bool bIsAiming);
 
+	UFUNCTION()
+	void OnRep_EquippedWeapon();
+
+	// Handle firing
+	void FireButtonPressed(bool bPressed);
+
+	void Fire();
+
+	// We want this to run on all clients and the server
+	// So first we ask the server to fire
+	UFUNCTION(Server, Reliable)
+	void ServerFire();
+
+	// Then the server sends it out the the other clients.
+	UFUNCTION(NetMulticast, Reliable)
+	void NetMulticastFire();
+
+
+
 private:
 	class ABlasterCharacter* Character;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	class AWeapon* EquippedWeapon;
-
-	UFUNCTION()
-	void OnRep_EquippedWeapon();
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -51,6 +67,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
+
+	bool bFireButtonPressed;
 public:	
 
 		
