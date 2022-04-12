@@ -19,6 +19,24 @@ UCombatComponent::UCombatComponent()
 	AimWalkSpeed = 450.f;
 }
 
+
+void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	// This is how we replicate a variable
+	// It is however conditional on the condition being met,
+	// otherwise it's not matched
+	// Here it's set to whoever "owns" the current pawn. Or,
+	// the current user.
+
+	// ENSURE ALL VARIABLES TO BE REPLICATED ARE SET
+
+	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME(UCombatComponent, bFireButtonPressed);
+}
+
 void UCombatComponent::BeginPlay()
 {
 	Super::BeginPlay();
@@ -77,7 +95,7 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 
 void UCombatComponent::Fire()
 {
-	if (Character && EquippedWeapon && bFireButtonPressed)
+	if (bFireButtonPressed)
 	{
 		ServerFire();
 	}
@@ -87,32 +105,20 @@ void UCombatComponent::Fire()
 void UCombatComponent::ServerFire_Implementation()
 {
 	if (Character && Character->HasAuthority()) {
-		NetMulticastFire();
+		MulticastFire();
 	}
 }
 
-void UCombatComponent::NetMulticastFire_Implementation()
+void UCombatComponent::MulticastFire_Implementation()
 {
-	Character->PlayFireMontage(bAiming);
-	EquippedWeapon->Fire();
+	if (Character && EquippedWeapon) 
+	{
+		Character->PlayFireMontage(bAiming);
+		EquippedWeapon->Fire();
+	}
 }
 
 
-void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	// This is how we replicate a variable
-	// It is however conditional on the condition being met,
-	// otherwise it's not matched
-	// Here it's set to whoever "owns" the current pawn. Or,
-	// the current user.
-
-	// ENSURE ALL VARIABLES TO BE REPLICATED ARE SET
-
-	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
-	DOREPLIFETIME(UCombatComponent, bAiming);
-}
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {

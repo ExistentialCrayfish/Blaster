@@ -40,16 +40,18 @@ protected:
 	// Handle firing
 	void FireButtonPressed(bool bPressed);
 
+	// We want to fire - call this and it'll be handled
+	// (so long as we have a weapon ofc)
 	void Fire();
 
 	// We want this to run on all clients and the server
-	// So first we ask the server to fire
+	// So first we ask the server to fire.
 	UFUNCTION(Server, Reliable)
 	void ServerFire();
 
 	// Then the server sends it out the the other clients.
 	UFUNCTION(NetMulticast, Reliable)
-	void NetMulticastFire();
+	void MulticastFire();
 
 
 
@@ -68,6 +70,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
 
+	UPROPERTY(Replicated)
 	bool bFireButtonPressed;
 public:	
 
