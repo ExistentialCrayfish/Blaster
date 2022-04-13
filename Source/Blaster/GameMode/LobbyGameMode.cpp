@@ -13,10 +13,13 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	// We check how many players we have in the game
 	int32 NumberOfPlayers = GameState.Get()->PlayerArray.Num();
 
-	if (NumberOfPlayers >= MinServerPlayerCount)
+	Say(FString("Welcome Player!"));
+
+	if (NumberOfPlayers > MinServerPlayerCount)
 	{
 		// Get the world (which allows the server to travel)
 		UWorld* World = GetWorld();
+		
 
 		// If the world exists, we can travel to the new world
 		if (World != nullptr) {

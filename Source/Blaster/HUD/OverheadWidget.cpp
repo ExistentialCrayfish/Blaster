@@ -13,9 +13,9 @@ void UOverheadWidget::SetDisplayText(FString TextToDisplay)
 	}
 }
 
-void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
+void UOverheadWidget::ShowPlayerName(APawn* InPawn)
 {
-	APlayerState* State = GetOwningPlayerState();
+	APlayerState* State = InPawn->GetPlayerState();
 	if (State == nullptr) {
 
 #if UE_BUILD_DEBUG
@@ -28,7 +28,7 @@ void UOverheadWidget::ShowPlayerNetRole(APawn* InPawn)
 	FString PlayerName = State->GetPlayerName();
 
 	if (!PlayerName.IsEmpty()) {
-		FString RoleString = FString::Printf(TEXT("Player: %s"), *PlayerName);
+		FString RoleString = FString::Printf(TEXT("%s"), *PlayerName);
 
 		SetDisplayText(RoleString);
 	}

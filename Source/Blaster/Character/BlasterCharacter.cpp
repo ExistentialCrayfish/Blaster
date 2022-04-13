@@ -2,17 +2,32 @@
 
 
 #include "BlasterCharacter.h"
+
 #include "GameFramework/SpringArmComponent.h"
-#include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+
 #include "Components/WidgetComponent.h"
-#include "Net/UnrealNetwork.h"
+#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
+
 #include "Blaster/Weapon/Weapon.h"
+#include "Blaster/Weapon/Projectile.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterTypes/OrientationMode.h"
-#include "Components/CapsuleComponent.h"
-#include "Kismet/KismetMathLibrary.h"
 #include "BlasterAnimInstance.h"
+
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
+
+#include "Net/UnrealNetwork.h"
+
+#include "Sound/SoundCue.h"
+
+#include "Camera/CameraComponent.h"
+
+
+
+
 
 ABlasterCharacter::ABlasterCharacter()
 {
@@ -44,6 +59,18 @@ ABlasterCharacter::ABlasterCharacter()
 	TurningInPlace = ETurningInPlace::ETIP_NotTurning;
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
+
+
+
+	BulletWhipSoundArea = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
+	BulletWhipSoundArea->SetupAttachment(RootComponent);
+
+	BulletWhipSoundArea->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	BulletWhipSoundArea->SetCollisionResponseToChannels(ECollisionResponse::ECR_Ignore);
+	BulletWhipSoundArea->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldDynamic, ECollisionResponse::ECR_Overlap);
+
+	// Bind collision to the overlap event. THis should only be server side.
+	BulletWhipSoundArea->OnComponentEndOverlap.AddDynamic(this, &ABlasterCharacter::OnBulletWhipSphereEndOverlap);
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -92,6 +119,27 @@ void ABlasterCharacter::PostInitializeComponents()
 	if (Combat)
 	{
 		Combat->Character = this;
+	}
+}
+
+// When a bullet overlaps with the sphere around the player, we play a whip sound
+void ABlasterCharacter::OnBulletWhipSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	// Check the other actor is a projectile
+	AProjectile* Projectile = Cast<AProjectile>(OtherActor);
+	if (Projectile == nullptr || Projectile->GetOwner() == this || !IsLocallyControlled()) return;
+
+
+
+	if (BulletWhipSound)
+	{
+
+		UE_LOG(LogTemp, Warning, TEXT("WHIP"));
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			BulletWhipSound,
+			Projectile->GetActorLocation()
+		);
 	}
 }
 
@@ -261,11 +309,11 @@ void ABlasterCharacter::FireButtonReleased()
 
 void ABlasterCharacter::TurnInPlace(float DeltaTime)
 {
-	if (AO_Yaw > 90.f)
+	if (AO_Yaw > 78.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Right;
 	}
-	else if (AO_Yaw < -90.f)
+	else if (AO_Yaw < -78.f)
 	{
 		TurningInPlace = ETurningInPlace::ETIP_Left;
 	}

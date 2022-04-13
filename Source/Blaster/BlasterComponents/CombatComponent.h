@@ -6,6 +6,8 @@
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
+#define TRACE_LENGTH 20000.f
+
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class BLASTER_API UCombatComponent : public UActorComponent
@@ -47,16 +49,20 @@ protected:
 	// We want this to run on all clients and the server
 	// So first we ask the server to fire.
 	UFUNCTION(Server, Reliable)
-	void ServerFire();
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget);
 
 	// Then the server sends it out the the other clients.
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastFire();
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget);
 
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
+	void SetHUDCrosshairs(float DeltaTime);
 
 private:
 	class ABlasterCharacter* Character;
+	class ABlasterPlayerController* Controller;
+	class ABlasterHUD* HUD;
 
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	class AWeapon* EquippedWeapon;
@@ -70,9 +76,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	float AimWalkSpeed;
 
-	UPROPERTY(Replicated)
 	bool bFireButtonPressed;
-public:	
 
+	// Fire delay timer (fire rate in seconds per shot)
+	UPROPERTY(EditAnywhere)
+	float FireRate;
+	// Time elapsed since last shot
+	float TimeSinceLastFire; 
+
+public:	
 		
 };

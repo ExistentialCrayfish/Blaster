@@ -18,6 +18,5 @@ public:
 	UPROPERTY(EditAnywhere, Category = Server)
 	int32 MinServerPlayerCount;
 
-	virtual void PostLogin(APlayerController* NewPlayer) override;
-	
+	virtual void PostLogin(APlayerController* NewPlayer) override;	
 };

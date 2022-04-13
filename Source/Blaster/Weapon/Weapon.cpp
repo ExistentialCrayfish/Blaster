@@ -2,12 +2,15 @@
 
 
 #include "Weapon.h"
+
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Net/UnrealNetwork.h"
 #include "Animation/AnimationAsset.h"
-#include "Components/SkeletalMeshComponent.h"
+#include "BulletCasing.h"
+#include "Engine/SkeletalMeshSocket.h"
 
 
 // Sets default values
@@ -15,6 +18,9 @@ AWeapon::AWeapon()
 {
 	PrimaryActorTick.bCanEverTick = false;
 	// We make the weapon have authority only on the server.
+	// this must be set to ensure that this is the case
+	// This ensures that it is spawned on the server,
+	// and propogated to clients.
 	bReplicates = true;
 
 	WeaponMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("WeaponMesh"));
@@ -153,11 +159,41 @@ void AWeapon::ShowPickupWidget(bool bShowWidget)
 	}
 }
 
-void AWeapon::Fire()
+void AWeapon::Fire(const FVector& HitTarget)
 {
 	if (FireAnimation) 
 	{
 		WeaponMesh->PlayAnimation(FireAnimation, false);
+	}
+
+	if (BulletCasingClass)
+	{	
+		const USkeletalMeshSocket* AmmoEjectSocket = GetWeaponMesh()->GetSocketByName(FName("AmmoEject"));
+
+		if (AmmoEjectSocket)
+		{
+			FTransform SocketTransform = AmmoEjectSocket->GetSocketTransform(GetWeaponMesh());
+
+			float RandomRotOffsetY = FMath::RandRange(-20.f, 20.f);
+			FRotator SocketRotation = SocketTransform.Rotator();
+			SocketRotation.Add(0.f, RandomRotOffsetY, 0.f);
+
+
+			// Spawn actor at transform
+			if (BulletCasingClass)
+			{
+				UWorld* World = GetWorld();
+
+				if (World)
+				{
+					World->SpawnActor<ABulletCasing>(
+						BulletCasingClass,
+						SocketTransform.GetLocation(),
+						SocketRotation
+					);
+				}
+			}
+		}
 	}
 }
 

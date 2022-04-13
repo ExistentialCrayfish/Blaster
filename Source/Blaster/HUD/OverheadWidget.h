@@ -31,7 +31,7 @@ public:
 
 	// Get a pawn's server related role
 	UFUNCTION(BlueprintCallable)
-	void ShowPlayerNetRole(APawn* InPawn);
+	void ShowPlayerName(APawn* InPawn);
 
 protected:
 	virtual void OnLevelRemovedFromWorld(ULevel* InLevel, UWorld* InWorld) override;

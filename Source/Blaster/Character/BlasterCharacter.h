@@ -38,6 +38,15 @@ protected:
 	void FireButtonPressed();
 	void FireButtonReleased();
 
+
+	UFUNCTION()
+	virtual void OnBulletWhipSphereEndOverlap(
+		UPrimitiveComponent* OverlappedComponent,
+		AActor* OtherActor,
+		UPrimitiveComponent* OtherComp,
+		int32 OtherBodyIndex
+	);
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 		class USpringArmComponent* CameraBoom;
@@ -71,6 +80,13 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
+	// Overlap for when a bullet passes next to the player head (whip sound)
+	UPROPERTY(VisibleAnywhere)
+	class USphereComponent* BulletWhipSoundArea;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* BulletWhipSound;
+
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -80,5 +96,6 @@ public:
 	FORCEINLINE float GetAO_Pitch() const { return AO_Pitch; }
 	AWeapon* GetEquippedWeapon();
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
+	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
 	void SetOrientationMode(EOrientationMode OrientationMode);
 };
