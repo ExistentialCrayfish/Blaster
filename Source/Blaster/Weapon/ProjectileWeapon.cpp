@@ -61,10 +61,15 @@ void AProjectileWeapon::MulticastSpawnProjectile_Implementation(const FVector_Ne
 		UWorld* World = GetWorld();
 		if (World)
 		{
+			FActorSpawnParameters SpawnParameters;
+			SpawnParameters.Owner = GetOwner();
+			SpawnParameters.Instigator = Cast<APawn>(GetOwner());;
+
 			World->SpawnActor<AProjectile>(
 				ProjectileClass,
 				SpawnPosition,
-				SpawnRotation
+				SpawnRotation,
+				SpawnParameters
 				);
 		}
 	}

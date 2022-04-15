@@ -6,10 +6,11 @@
 #include "GameFramework/Character.h"
 #include "Blaster/BlasterTypes/TurningInPlace.h"
 #include "Blaster/BlasterTypes/OrientationMode.h"
+#include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -21,6 +22,8 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(bool bAiming);
+
+	void SetPlayerTagVisiblity();
 
 protected:
 	virtual void BeginPlay() override;
@@ -87,6 +90,10 @@ private:
 	UPROPERTY(EditAnywhere)
 	class USoundCue* BulletWhipSound;
 
+	void HideCharacterIfCameraClose();
+	UPROPERTY(EditAnywhere)
+	float CameraThreshold = 200.f;
+
 
 public:
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -98,4 +105,7 @@ public:
 	FORCEINLINE ETurningInPlace GetTurningInPlace() const { return TurningInPlace; }
 	FORCEINLINE UCombatComponent* GetCombatComponent() const { return Combat; }
 	void SetOrientationMode(EOrientationMode OrientationMode);
+	FVector GetHitTarget() const;
+	FORCEINLINE UCameraComponent* GetFollowCamera() const { return FollowCamera; }
+
 };

@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+	// Fill out your copyright notice in the Description page of Project Settings.
 
 
 #include "BlasterAnimInstance.h"
@@ -61,5 +61,21 @@ void UBlasterAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		BlasterCharacter->GetMesh()->TransformToBoneSpace(FName("hand_r"), LeftHandTransform.GetLocation(), FRotator::ZeroRotator, OutPosition, OutRotation);
 		LeftHandTransform.SetLocation(OutPosition);
 		LeftHandTransform.SetRotation(FQuat(OutRotation));
+
+		// Only calculate if local. It's cosmetic, no point replicating
+
+		if (BlasterCharacter->IsLocallyControlled())
+		{
+			bLocallyControlled = true;
+			FTransform RightHandTransform = EquippedWeapon->GetWeaponMesh()->GetSocketTransform(FName("hand_r"), ERelativeTransformSpace::RTS_World);
+			// takes two vectors (start, target) and returns FRotator that is the rotation from the start to the target
+			FRotator LookAtRotation = UKismetMathLibrary::FindLookAtRotation(
+				RightHandTransform.GetLocation(),
+				// Here we get the vector starting at the right hand location, and add the direction from the hit target to the rand hand location
+				// This effectively gets the lookat rotation in the opposite direction
+				RightHandTransform.GetLocation() + (RightHandTransform.GetLocation() - BlasterCharacter->GetHitTarget())
+			);
+			RightHandRotation = FMath::RInterpTo(RightHandRotation, LookAtRotation, DeltaTime, 15.f);
+		}
 	}
 }

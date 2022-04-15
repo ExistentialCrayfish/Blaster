@@ -64,6 +64,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USphereComponent* AreaSphere;
 
+	// Per second fire rate (eg 0.1 is 600 rounds per minute)
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	float FireRate = 1.f;
+
 	UPROPERTY(ReplicatedUsing = OnRep_WeaponState, VisibleAnywhere, Category = "Weapon Properties")
 	EWeaponState WeaponState;
 
@@ -79,6 +83,16 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	TSubclassOf<class ABulletCasing> BulletCasingClass;
+
+	/*
+		Zoomed FOV while aiming
+	*/
+
+	UPROPERTY(EditAnywhere, Category = "Zoom Properties")
+		float ZoomedFOV = 30.f;
+
+	UPROPERTY(EditAnywhere, Category = "Zoom Properties")
+		float ZoomInterpSpeed = 20.f;
 
 public:	
 	/*
@@ -100,7 +114,14 @@ public:
 		UTexture2D* CrosshairsBottom;
 
 public:
+	FORCEINLINE float GetFireRate() const { return FireRate; }
+
 	void SetWeaponState(EWeaponState State);
 
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const { return WeaponMesh; }
+
+	FORCEINLINE float GetZoomedFOV() const { return ZoomedFOV; }
+
+	FORCEINLINE float GetZoomedInterpSpeed() const { return ZoomInterpSpeed; }
+
 };

@@ -52,6 +52,8 @@ ABlasterCharacter::ABlasterCharacter()
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
+
 
 	SetOrientationMode(EOrientationMode::EOM_OrientWithMovement);
 	GetCharacterMovement()->RotationRate = FRotator(0.f, 0.f, 850.f);
@@ -90,6 +92,10 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+
+	SetPlayerTagVisiblity();
+
+	HideCharacterIfCameraClose();
 }
 
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -127,14 +133,12 @@ void ABlasterCharacter::OnBulletWhipSphereEndOverlap(UPrimitiveComponent* Overla
 {
 	// Check the other actor is a projectile
 	AProjectile* Projectile = Cast<AProjectile>(OtherActor);
-	if (Projectile == nullptr || Projectile->GetOwner() == this || !IsLocallyControlled()) return;
+	if (Projectile == nullptr || Projectile->GetInstigator() == Cast<APawn>(this) || !IsLocallyControlled()) return;
 
 
 
 	if (BulletWhipSound)
 	{
-
-		UE_LOG(LogTemp, Warning, TEXT("WHIP"));
 		UGameplayStatics::PlaySoundAtLocation(
 			this,
 			BulletWhipSound,
@@ -155,6 +159,30 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		SectionName = bAiming ? FName("RifleAim") : FName("RifleHip");
 
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::SetPlayerTagVisiblity()
+{
+	if (OverheadWidget)
+	{
+		// Get the widget location in world space
+		FVector OverheadWidgetLocation = GetActorLocation() + OverheadWidget->GetRelativeLocation();
+		FVector MainCameraLocation = UGameplayStatics::GetPlayerCameraManager(this, 0)->GetCameraLocation();
+
+		FHitResult VisiblityResult;
+		// Cast a single channel line trace
+		GetWorld()->LineTraceSingleByChannel(VisiblityResult, OverheadWidgetLocation, MainCameraLocation, ECollisionChannel::ECC_Visibility);
+		
+		// Check for a hit
+		if (VisiblityResult.bBlockingHit)
+		{
+			OverheadWidget->SetVisibility(false);
+		}
+		else
+		{
+			OverheadWidget->SetVisibility(true);
+		}
 	}
 }
 
@@ -329,6 +357,31 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
+void ABlasterCharacter::HideCharacterIfCameraClose()
+{
+	if (!IsLocallyControlled())
+	{
+		return;
+	}
+
+	if (FollowCamera && (FollowCamera->GetComponentLocation() - GetActorLocation()).Size() < CameraThreshold)
+	{
+		GetMesh()->SetVisibility(false);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if (Combat && Combat->EquippedWeapon && Combat->EquippedWeapon->GetWeaponMesh())
+		{
+			Combat->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
+	}
+}
+
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if (OverlappingWeapon)
@@ -387,4 +440,14 @@ void ABlasterCharacter::SetOrientationMode(EOrientationMode OrientationMode)
 		break;
 	}
 
+}
+
+FVector ABlasterCharacter::GetHitTarget() const
+{
+	if (Combat == nullptr)
+	{
+		return FVector();
+	}
+
+	return Combat->HitTarget;
 }

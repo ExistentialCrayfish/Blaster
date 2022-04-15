@@ -82,10 +82,6 @@ void AProjectile::Destroyed()
 			GetActorTransform()
 		);
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ImpactParticles Invalid!"));
-	}
 
 	if (ImpactSound)
 	{
@@ -94,10 +90,6 @@ void AProjectile::Destroyed()
 			ImpactSound,
 			GetActorLocation()
 		);
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("ImpactSound Invalid!"));
 	}
 }
 
